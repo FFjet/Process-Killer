@@ -42,8 +42,33 @@ DWORD Kill_process(char* pn)			//Process name
         NULL);
     return GetLastError();
 }
+bool EnableDebugPrivilege()   
+{   
+    HANDLE hToken;   
+    LUID sedebugnameValue;   
+    TOKEN_PRIVILEGES tkp;   
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+    {   
+        return   FALSE;   
+    }   
+    if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &sedebugnameValue))  
+    {   
+        CloseHandle(hToken);   
+        return false;   
+    }   
+    tkp.PrivilegeCount = 1;   
+    tkp.Privileges[0].Luid = sedebugnameValue;   
+    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;   
+    if (!AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(tkp), NULL, NULL)) 
+    {   
+        CloseHandle(hToken);   
+        return false;   
+    }   
+    return true;   
+}
 int main(int argc, char **argv)
 {
+	EnableDebugPrivilege();
 	char a[1000];
     printf("Enter the Process Name to kill:\n");
 	scanf("%s", a);
